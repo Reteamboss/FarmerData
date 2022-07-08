@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets, QtSql, QtCore, QtGui
-from PyQt5.QtWidgets import QMenuBar , QMenu, QAction
+from PyQt5.QtWidgets import QMenuBar, QMenu, QAction
 from PyQt5.QtCore import Qt
 from designmc3 import Ui_MainWindow
 from interlogindesign import Ui_LoginWindow
@@ -11,6 +11,7 @@ import csv
 import time
 from random import randint
 
+
 class RegistrationForm(QtWidgets.QMainWindow):
     def __init__(self):
         super(RegistrationForm, self).__init__()
@@ -20,6 +21,7 @@ class RegistrationForm(QtWidgets.QMainWindow):
         self.ui.pushButton_2.clicked.connect(self.back_login_window)
 
     def registration(self):
+        # user_id = cur.execute('SELECT COUNT(DISTINCT user_id) FROM users')
         firstname = self.ui.lineEdit_2.text()
         lastname = self.ui.lineEdit_3.text()
         username = self.ui.lineEdit_4.text()
@@ -28,7 +30,8 @@ class RegistrationForm(QtWidgets.QMainWindow):
         cur.execute(f"SELECT username, password FROM users WHERE username = '{username}' AND password = '{password}'")
 
         if cur.fetchone() is None:
-            cur.execute("INSERT OR IGNORE INTO users VALUES (?,?,?,?,?)", (firstname, lastname,username, password,email))
+            cur.execute("INSERT OR IGNORE INTO users VALUES (?,?,?,?,?)",
+                        (firstname, lastname, username, password, email))
             con.commit()
             self.ui.label_7.setText("<font color=green>Вы успешно зарегестрировались!</font>")
             time.sleep(1)
@@ -36,11 +39,9 @@ class RegistrationForm(QtWidgets.QMainWindow):
         else:
             self.ui.label_7.setText("<font color=red>Такой логин уже существует!</font>")
 
-
     def back_login_window(serf):
         login_window.show()
         reg_form.close()
-
 
 
 class LoginWindow(QtWidgets.QMainWindow):
@@ -52,10 +53,12 @@ class LoginWindow(QtWidgets.QMainWindow):
         self.ui.commandLinkButton_3.clicked.connect(self.registration)
         self.ui.pushButton.clicked.connect(self.sign_in)
 
-    def sign_in(self,):
+    def sign_in(self):
         username = self.ui.lineEdit_2.text()
         password = self.ui.lineEdit.text()
-        querry = cur.execute(f"SELECT username, password FROM users WHERE username = '{username}' AND password = '{password}'")
+        querry = cur.execute(
+            f"SELECT username, password FROM users WHERE username = '{username}' AND password = '{password}'")
+        # user = cur.execute(f"SELECT user_id FROM users WHERE username = '{username}' AND password = '{password}'")
         con.commit()
         if not cur.fetchone():
             self.ui.label_4.setText("<font color=red>Неверный логин и/или пароль!</font>")
@@ -64,13 +67,9 @@ class LoginWindow(QtWidgets.QMainWindow):
             login_window.close()
             self.ui.label_4.setText("<font color=green>Успешно!Добро пожаловать!</font>")
 
-
     def registration(self):
         login_window.close()
         reg_form.show()
-
-
-
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -83,16 +82,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.pushButton_2.clicked.connect(self.show_by_category)
         self.find_result = self.ui.pushButton_2.clicked.connect(self.show_by_category)
         self.ui.pushButton_4.clicked.connect(self.show_all)
+        self.ui.pushButton.clicked.connect(self.add_feedback)
         self.ui.action_CSV.triggered.connect(self.import_from_csv)
         self.ui.actionState_2.triggered.connect(self.sorted_state_min_max)
         self.ui.actionState_3.triggered.connect(self.sorted_state_max_min)
         self.ui.actionCity_2.triggered.connect(self.sorted_city_min_max)
         self.ui.actionCity_3.triggered.connect(self.sorted_city_max_min)
-        self.ui.action_2.triggered.connect(self.addrecord)
+        self.ui.tableView.setSelectionBehavior(self.ui.tableView.SelectRows)
+        self.ui.tableView.setMouseTracking(True)
+        # self.ui.lineEdit_2.activated(self.show_by_category)
+        # self.ui.action_2.triggered.connect()
         # self.ui.tableView.setHorizontalHeader()
 
         # self.ui.tableView.grabMouse()
-
 
     def contextMenuEvent(self, e):
         context = QMenu(self)
@@ -115,18 +117,20 @@ class MainWindow(QtWidgets.QMainWindow):
         stm.setTable('maininfo')
         stm.select()
         MainWindow.set_column_tableview_width(self)
-        count = stm.rowCount()
-        self.ui.label.setText('<font color=green>Успешно! Отображено {} записей</font>'.format(count + 1))
+        cur.execute("SELECT * FROM maininfo")
+        count = len(cur.fetchall())
+        print(count)
+        self.ui.label.setText('<font color=green>Успешно! Отображено {} записей</font>'.format(count))
 
-    def addrecord(self):
-        tv = self.ui.tableView
-        tv.setModel(stm)
-        tv.setItemDelegateForColumn(0, QtSql.QSqlRelationalDelegate(tv))
+    def add_feedback(self):
+        tv = self.ui.tableView_2
+        tv.setModel(stm2)
+        # tv.setItemDelegateForColumn(0, QtSql.QSqlRelationalDelegate(tv))
         con1.open()
-        stm.setTable('maininfo')
-        stm.select()
-        stm.insertRow(stm.rowCount())
-        self.ui.label.setText('<font color=green>Запись успешно добавлена!</font>')
+        stm2.setTable('feedbacks')
+        stm2.select()
+        stm2.insertRow(stm.rowCount())
+        self.ui.label.setText('<font color=green>Отзыв успешно добавлен!</font>')
 
     def delrecord(self):
         tv = self.ui.tableView
@@ -166,7 +170,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def mouseReleaseEvent(self, e):
         if e.button() == Qt.LeftButton:
-            self.ui.label.setText("mouseReleaseEvent LEFT")
+            index_row = self.ui.tableView.currentIndex
+            self.ui.label.setText(f"{index_row}")
 
         elif e.button() == Qt.MiddleButton:
             self.ui.label.setText("mouseReleaseEvent MIDDLE")
@@ -184,36 +189,41 @@ class MainWindow(QtWidgets.QMainWindow):
         elif e.button() == Qt.RightButton:
             self.ui.label.setText("mouseDoubleClickEvent RIGHT")
 
-    def sorted(self, column,minmax):   #minmax - 1 - по возрастанию, minmax - 2 по убыванию, column - номер колонки
+    def sorted(self, column, minmax):  # minmax - 1 - по возрастанию, minmax - 2 по убыванию, column - номер колонки
         tv = self.ui.tableView
         tv.setModel(stm)
         con1.open()
         stm.setTable('maininfo')
         if minmax == 1:
-            stm.setSort(column, QtCore.Qt.AscendingOrder)#min->max
+            stm.setSort(column, QtCore.Qt.AscendingOrder)  # min->max
         elif minmax == 2:
-            stm.setSort(column, QtCore.Qt.DescendingOrder)#max->min
+            stm.setSort(column, QtCore.Qt.DescendingOrder)  # max->min
         stm.select()
         MainWindow.set_column_tableview_width(self)
         con1.close()
 
     def sorted_rating_min_max(self):
-        MainWindow.sorted(self,5,1)
+        MainWindow.sorted(self, 5, 1)
+
     def sorted_state_min_max(self):
-        MainWindow.sorted(self,3,1)
+        MainWindow.sorted(self, 3, 1)
+
     def sorted_city_min_max(self):
-        MainWindow.sorted(self,2,1)
+        MainWindow.sorted(self, 2, 1)
+
     # def sorted_location_min_max(self):
     #     MainWindow.sorted(self,5,1)
     def sorted_rating_max_min(self):
-        MainWindow.sorted(self,5,2)
+        MainWindow.sorted(self, 5, 2)
+
     def sorted_state_max_min(self):
-        MainWindow.sorted(self,3,2)
+        MainWindow.sorted(self, 3, 2)
+
     def sorted_city_max_min(self):
-        MainWindow.sorted(self,2,2)
+        MainWindow.sorted(self, 2, 2)
+
     # def sorted_location_max_min(self):
     #     MainWindow.sorted(self,5,2)
-
 
     def show_by_date(self):
         dataedit3 = self.ui.dateEdit.date().toString('yyyy-MM-dd')
@@ -255,8 +265,6 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.ui.label.setText('<font color=red>Вы ничего не выбрали!</font>')
 
-
-
     def import_from_csv(self):
         file = QtWidgets.QFileDialog.getOpenFileName(parent=window, caption="Выбор файла", directory="c:\\python36",
                                                      filter="csv format (*.csv)",
@@ -265,7 +273,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if filename != "":
             with open(filename, 'r') as fin:
                 dr = csv.DictReader(fin)
-                rating = randint(1,5)
+                rating = randint(1, 5)
                 to_db = [(i['FMID'], i['MarketName'], i['city'], i['State'], i['zip']) for i in dr]
                 cur.executemany(
                     "INSERT OR IGNORE INTO maininfo (FMID,MarketName, city, State,zip) VALUES ( ?, ?, ?, ?, ?);", to_db)
@@ -274,20 +282,19 @@ class MainWindow(QtWidgets.QMainWindow):
                 # )
             with open(filename, 'r') as fin:
                 dr2 = csv.DictReader(fin)
-                to_db2 = [( i['Website'],
-                          i['street'], i['County'], i['OtherMedia'], i['Facebook'],
-                          i['Twitter'], i['Youtube'], i['Season1Date'],
-                          i['Season1Time'],
-                          i['Season2Date'], i['Season2Time'], i['Season3Date'], i['Season3Time'],
-                          i['Season4Date'], i['Season4Time'], i['x'], i['y'], i['Location'], i['Credit'], i['WIC'],
-                          i['WICcash'],
-                          i['SFMNP'], i['SNAP'], i['Organic'], i['Bakedgoods'], i['Cheese'], i['Crafts'], i['Flowers'],
-                          i['Eggs'], i['Seafood'], i['Herbs'], i['Vegetables'], i['Honey'], i['Jams'], i['Maple'],
-                          i['Meat'],
-                          i['Nursery'], i['Nuts'], i['Plants'], i['Poultry'], i['Prepared'], i['Soap'],
-                          i['Trees'], i['Wine'], i['Coffee'], i['Beans'], i['Fruits'], i['Grains'], i['Juices'],
-                          i['Mushrooms'], i['PetFood'], i['Tofu'], i['WildHarvested']) for i in dr2]
-
+                to_db2 = [(i['Website'],
+                           i['street'], i['County'], i['OtherMedia'], i['Facebook'],
+                           i['Twitter'], i['Youtube'], i['Season1Date'],
+                           i['Season1Time'],
+                           i['Season2Date'], i['Season2Time'], i['Season3Date'], i['Season3Time'],
+                           i['Season4Date'], i['Season4Time'], i['x'], i['y'], i['Location'], i['Credit'], i['WIC'],
+                           i['WICcash'],
+                           i['SFMNP'], i['SNAP'], i['Organic'], i['Bakedgoods'], i['Cheese'], i['Crafts'], i['Flowers'],
+                           i['Eggs'], i['Seafood'], i['Herbs'], i['Vegetables'], i['Honey'], i['Jams'], i['Maple'],
+                           i['Meat'],
+                           i['Nursery'], i['Nuts'], i['Plants'], i['Poultry'], i['Prepared'], i['Soap'],
+                           i['Trees'], i['Wine'], i['Coffee'], i['Beans'], i['Fruits'], i['Grains'], i['Juices'],
+                           i['Mushrooms'], i['PetFood'], i['Tofu'], i['WildHarvested']) for i in dr2]
 
                 cur.executemany(
                     "INSERT OR IGNORE INTO moreinfo (Website , street,County, OtherMedia, Facebook,Twitter,Youtube,"
@@ -325,7 +332,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.tableView.setColumnWidth(4, 60)
         self.ui.tableView.setColumnWidth(5, 50)
         self.ui.tableView.hideColumn(6)
-
 
 
 with sq.connect("farms.db") as con:
@@ -399,13 +405,19 @@ with sq.connect("farms.db") as con:
         FOREIGN KEY (moreinfo_id) REFERENCES moreinfo (moreinfo_id))
         """)
 
-
     cur.execute("""CREATE TABLE IF NOT EXISTS users (
         lastname VARCHAR,
         firstname VARCHAR,
         username VARCHAR,
         password VARCHAR,
         email VARCHAR )""")
+
+    cur.execute("""CREATE TABLE IF NOT EXISTS feedbacks (
+            farm_id INTEGER,
+            user_id INTEGER,
+            text VARCHAR,
+            FOREIGN KEY (farm_id) REFERENCES maininfo (id),
+            FOREIGN KEY (user_id) REFERENCES users (id))""")
 
     con.commit()
 
@@ -418,6 +430,7 @@ if __name__ == "__main__":
     con1.setDatabaseName('farms.db')
     con1.open()
     stm = QtSql.QSqlRelationalTableModel(parent=window)
+    stm2 = QtSql.QSqlRelationalTableModel(parent=window)
     # stm.setRelation(0, QtSql.QSqlRelation('categoryname', 'id_cat', 'category_name'))
     con1.close()
     # window.show()
