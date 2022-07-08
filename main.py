@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets, QtSql, QtCore, QtGui
 from PyQt5.QtWidgets import QMenuBar, QMenu, QAction
 from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication
 from designmc3 import Ui_MainWindow
 from interlogindesign import Ui_LoginWindow
 from rfdesign import Ui_RegFormWindow
@@ -90,6 +91,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.actionCity_3.triggered.connect(self.sorted_city_max_min)
         self.ui.tableView.setSelectionBehavior(self.ui.tableView.SelectRows)
         self.ui.tableView.setMouseTracking(True)
+        self.ui.tableView.clicked.connect(self.on_click_left_button)
+
         # self.ui.lineEdit_2.activated(self.show_by_category)
         # self.ui.action_2.triggered.connect()
         # self.ui.tableView.setHorizontalHeader()
@@ -119,7 +122,6 @@ class MainWindow(QtWidgets.QMainWindow):
         MainWindow.set_column_tableview_width(self)
         cur.execute("SELECT * FROM maininfo")
         count = len(cur.fetchall())
-        print(count)
         self.ui.label.setText('<font color=green>Успешно! Отображено {} записей</font>'.format(count))
 
     def add_feedback(self):
@@ -168,16 +170,75 @@ class MainWindow(QtWidgets.QMainWindow):
             # handle the right-button press in here.
             self.ui.label.setText("mousePressEvent RIGHT")
 
-    def mouseReleaseEvent(self, e):
-        if e.button() == Qt.LeftButton:
-            index_row = self.ui.tableView.currentIndex
-            self.ui.label.setText(f"{index_row}")
+    def on_click_left_button(self, index):
+        con1.open()
+        result = self.ui.tableView.model().index(index.row(),6).data()
+        cur.execute("SELECT * FROM moreinfo WHERE moreinfo_id = '{}'".format(result))
+        sql_result = list(cur.fetchone())
+        cur.execute("SELECT MarketName FROM maininfo WHERE moreinfo_id = '{}'".format(result))
+        market_name = list(cur.fetchone())
+        self.ui.label.setText(f"index row = {index.row()+1}")
+        MainWindow.show_more_information(self, sql_result,market_name)
 
-        elif e.button() == Qt.MiddleButton:
-            self.ui.label.setText("mouseReleaseEvent MIDDLE")
 
-        elif e.button() == Qt.RightButton:
-            self.ui.label.setText("mouseReleaseEvent RIGHT")
+    def show_more_information(self, sql_result, market_name):
+        self.ui.label_3.setText(market_name[0])
+        self.ui.label_21.setText(f'<a href="{str(sql_result[1])}">{sql_result[1]}</a>')
+        self.ui.label_22.setText(sql_result[2])
+        self.ui.label_23.setText(sql_result[3])
+        self.ui.label_24.setText(sql_result[4])
+        self.ui.label_25.setText(sql_result[5])
+        self.ui.label_26.setText(sql_result[6])
+        self.ui.label_27.setText(sql_result[7])
+        self.ui.label_28.setText(sql_result[8])
+        self.ui.label_29.setText(sql_result[9])
+        self.ui.label_30.setText(sql_result[10])
+        self.ui.label_31.setText(sql_result[11])
+        self.ui.label_32.setText(sql_result[12])
+        self.ui.label_33.setText(sql_result[13])
+        self.ui.label_34.setText(sql_result[14])
+        self.ui.label_35.setText(sql_result[15])
+        self.ui.label_36.setText(sql_result[16])
+        self.ui.label_37.setText(sql_result[17])
+        self.ui.label_52.setText(sql_result[18])
+        self.ui.label_67.setText(sql_result[19])
+        self.ui.label_46.setText(sql_result[20])
+        self.ui.label_45.setText(sql_result[21])
+        self.ui.label_43.setText(sql_result[22])
+        self.ui.label_54.setText(sql_result[23])
+        self.ui.label_58.setText(sql_result[24])
+        self.ui.label_42.setText(sql_result[25])
+        self.ui.label_40.setText(sql_result[26])
+        self.ui.label_44.setText(sql_result[27])
+        self.ui.label_68.setText(sql_result[28])
+        self.ui.label_61.setText(sql_result[29])
+        self.ui.label_63.setText(sql_result[30])
+        self.ui.label_55.setText(sql_result[31])
+        self.ui.label_72.setText(sql_result[32])
+        self.ui.label_66.setText(sql_result[33])
+        self.ui.label_39.setText(sql_result[34])
+        self.ui.label_73.setText(sql_result[35])
+        self.ui.label_93.setText(sql_result[36])
+        self.ui.label_102.setText(sql_result[37])
+        self.ui.label_101.setText(sql_result[38])
+        self.ui.label_91.setText(sql_result[39])
+        self.ui.label_79.setText(sql_result[40])
+        self.ui.label_96.setText(sql_result[41])
+        self.ui.label_103.setText(sql_result[42])
+        self.ui.label_90.setText(sql_result[43])
+        self.ui.label_84.setText(sql_result[44])
+        self.ui.label_77.setText(sql_result[45])
+        self.ui.label_82.setText(sql_result[46])
+        self.ui.label_100.setText(sql_result[47])
+        self.ui.label_105.setText(sql_result[48])
+        self.ui.label_99.setText(sql_result[49])
+        self.ui.label_92.setText(sql_result[50])
+        self.ui.label_98.setText(sql_result[51])
+        self.ui.label_110.setText(sql_result[52])
+        self.ui.label_112.setText(sql_result[53])
+        # self.ui.label_108.setText(sql_result[54])
+
+
 
     def mouseDoubleClickEvent(self, e):
         if e.button() == Qt.LeftButton:
@@ -255,7 +316,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if category != "":
             categoryfilter = f"city = '{category}' or State = '{category}' or zip = '{category}' "
             stm.setFilter(categoryfilter)
-            print(category)
             # stm.setSort(3, QtCore.Qt.AscendingOrder)
             stm.select()
             MainWindow.set_column_tableview_width(self)
