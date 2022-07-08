@@ -88,6 +88,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.actionState_3.triggered.connect(self.sorted_state_max_min)
         self.ui.actionCity_2.triggered.connect(self.sorted_city_min_max)
         self.ui.actionCity_3.triggered.connect(self.sorted_city_max_min)
+        self.ui.action_2.triggered.connect(self.addrecord)
         # self.ui.tableView.setHorizontalHeader()
 
         # self.ui.tableView.grabMouse()
@@ -110,15 +111,11 @@ class MainWindow(QtWidgets.QMainWindow):
     def show_all(self):
         tv = self.ui.tableView
         tv.setModel(stm)
-        self.ui.tableView.setModel(stm)
-        tv.setItemDelegateForColumn(0, QtSql.QSqlRelationalDelegate(tv))
         con1.open()
         stm.setTable('maininfo')
         stm.select()
-        # stm.setHeaderData(0, QtCore.Qt.Horizontal, 'Категория')
         MainWindow.set_column_tableview_width(self)
         count = stm.rowCount()
-        con1.close()
         self.ui.label.setText('<font color=green>Успешно! Отображено {} записей</font>'.format(count + 1))
 
     def addrecord(self):
@@ -126,12 +123,7 @@ class MainWindow(QtWidgets.QMainWindow):
         tv.setModel(stm)
         tv.setItemDelegateForColumn(0, QtSql.QSqlRelationalDelegate(tv))
         con1.open()
-        stm.setTable('expenses')
-        stm.setHeaderData(0, QtCore.Qt.Horizontal, 'Категория')
-        stm.setHeaderData(1, QtCore.Qt.Horizontal, 'Название')
-        stm.setHeaderData(2, QtCore.Qt.Horizontal, 'Стоимость')
-        stm.setHeaderData(3, QtCore.Qt.Horizontal, 'Дата\n yyyy-mm-dd')
-        stm.setRelation(0, QtSql.QSqlRelation('categoryname', 'id_cat', 'category_name'))
+        stm.setTable('maininfo')
         stm.select()
         stm.insertRow(stm.rowCount())
         self.ui.label.setText('<font color=green>Запись успешно добавлена!</font>')
