@@ -50,6 +50,9 @@ class Ui_MainWindow(object):
         self.tableView.setGeometry(QtCore.QRect(10, 10, 681, 591))
         self.tableView.setShowGrid(False)
         self.tableView.setObjectName("tableView")
+        self.toolButton = QtWidgets.QToolButton(self.frame_2)
+        self.toolButton.setGeometry(QtCore.QRect(665, 579, 26, 22))
+        self.toolButton.setObjectName("toolButton")
         self.pushButton_4 = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_4.setGeometry(QtCore.QRect(110, 660, 113, 32))
         self.pushButton_4.setObjectName("pushButton_4")
@@ -989,11 +992,13 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "FarmData"))
-        MainWindow.setStyleSheet
         self.pushButton_3.setText(_translate("MainWindow", "Выйти"))
         self.pushButton_11.setText(_translate("MainWindow", "Quit"))
         self.label.setText(_translate("MainWindow", "TextLabel"))
         self.pushButton_2.setText(_translate("MainWindow", "Find"))
+        self.lineEdit_2.setInputMask(_translate("MainWindow", "Enter ZIP, City or State"))
+        self.lineEdit_2.setText(_translate("MainWindow", "Enter ZIP, City or State"))
+        self.toolButton.setText(_translate("MainWindow", "..."))
         self.pushButton_4.setText(_translate("MainWindow", "Show All"))
         self.label_2.setText(_translate("MainWindow", "Farm:"))
         self.label_20.setText(_translate("MainWindow", "Y:"))
