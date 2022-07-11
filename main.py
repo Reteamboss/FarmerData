@@ -174,7 +174,6 @@ class MainWindow(QtWidgets.QMainWindow):
         sql_result = list(cur.fetchone())
         cur.execute("SELECT MarketName FROM maininfo WHERE moreinfo_id = '{}'".format(result))
         market_name = list(cur.fetchone())
-        # self.ui.label.setText(f"index row = {index.row()+1}")
         MainWindow.show_more_information(self, sql_result,market_name)
 
 
