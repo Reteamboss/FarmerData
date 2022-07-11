@@ -5,72 +5,13 @@ from PyQt5.QtWidgets import QApplication
 from designmc3 import Ui_MainWindow
 from interlogindesign import Ui_LoginWindow
 from rfdesign import Ui_RegFormWindow
+from fildesign import Ui_Dialog
 import sys
 import sqlite3 as sq
 import pandas as pd
 import csv
 import time
 from random import randint
-
-
-class RegistrationForm(QtWidgets.QMainWindow):
-    def __init__(self):
-        super(RegistrationForm, self).__init__()
-        self.ui = Ui_RegFormWindow()
-        self.ui.setupUi(self)
-        self.ui.pushButton.clicked.connect(self.registration)
-        self.ui.pushButton_2.clicked.connect(self.back_login_window)
-
-    def registration(self):
-        # user_id = cur.execute('SELECT COUNT(DISTINCT user_id) FROM users')
-        firstname = self.ui.lineEdit_2.text()
-        lastname = self.ui.lineEdit_3.text()
-        username = self.ui.lineEdit_4.text()
-        password = self.ui.lineEdit_5.text()
-        email = self.ui.lineEdit_6.text()
-        cur.execute(f"SELECT username, password FROM users WHERE username = '{username}' AND password = '{password}'")
-
-        if cur.fetchone() is None:
-            cur.execute("INSERT OR IGNORE INTO users VALUES (?,?,?,?,?)",
-                        (firstname, lastname, username, password, email))
-            con.commit()
-            self.ui.label_7.setText("<font color=green>Вы успешно зарегестрировались!</font>")
-            time.sleep(1)
-            RegistrationForm.back_login_window(self)
-        else:
-            self.ui.label_7.setText("<font color=red>Такой логин уже существует!</font>")
-
-    def back_login_window(serf):
-        login_window.show()
-        reg_form.close()
-
-
-class LoginWindow(QtWidgets.QMainWindow):
-    def __init__(self):
-        super(LoginWindow, self).__init__()
-        self.ui = Ui_LoginWindow()
-        self.ui.setupUi(self)
-        self.ui.pushButton_2.clicked.connect(QtWidgets.qApp.quit)
-        self.ui.commandLinkButton_3.clicked.connect(self.registration)
-        self.ui.pushButton.clicked.connect(self.sign_in)
-
-    def sign_in(self):
-        username = self.ui.lineEdit_2.text()
-        password = self.ui.lineEdit.text()
-        querry = cur.execute(
-            f"SELECT username, password FROM users WHERE username = '{username}' AND password = '{password}'")
-        # user = cur.execute(f"SELECT user_id FROM users WHERE username = '{username}' AND password = '{password}'")
-        con.commit()
-        if not cur.fetchone():
-            self.ui.label_4.setText("<font color=red>Неверный логин и/или пароль!</font>")
-        else:
-            window.show()
-            login_window.close()
-            self.ui.label_4.setText("<font color=green>Успешно!Добро пожаловать!</font>")
-
-    def registration(self):
-        login_window.close()
-        reg_form.show()
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -92,6 +33,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.tableView.setSelectionBehavior(self.ui.tableView.SelectRows)
         self.ui.tableView.setMouseTracking(True)
         self.ui.tableView.clicked.connect(self.on_click_left_button)
+        self.ui.toolButton.clicked.connect(filter_window.show)
 
         # self.ui.lineEdit_2.activated(self.show_by_category)
         # self.ui.action_2.triggered.connect()
@@ -169,13 +111,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def on_click_left_button(self, index):
         con1.open()
-        result = self.ui.tableView.model().index(index.row(),6).data()
+        result = self.ui.tableView.model().index(index.row(), 6).data()
         cur.execute("SELECT * FROM moreinfo WHERE moreinfo_id = '{}'".format(result))
         sql_result = list(cur.fetchone())
         cur.execute("SELECT MarketName FROM maininfo WHERE moreinfo_id = '{}'".format(result))
         market_name = list(cur.fetchone())
-        MainWindow.show_more_information(self, sql_result,market_name)
-
+        MainWindow.show_more_information(self, sql_result, market_name)
 
     def show_more_information(self, sql_result, market_name):
         self.ui.label_3.setText(market_name[0])
@@ -233,8 +174,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.label_110.setText(sql_result[52])
         self.ui.label_112.setText(sql_result[53])
         # self.ui.label_108.setText(sql_result[54])
-
-
 
     # def mouseDoubleClickEvent(self, e):
     #     if e.button() == Qt.LeftButton:
@@ -391,6 +330,141 @@ class MainWindow(QtWidgets.QMainWindow):
         stm.setHeaderData(5, QtCore.Qt.Horizontal, 'Rating')
 
 
+class RegistrationForm(QtWidgets.QMainWindow):
+    def __init__(self):
+        super(RegistrationForm, self).__init__()
+        self.ui = Ui_RegFormWindow()
+        self.ui.setupUi(self)
+        self.ui.pushButton.clicked.connect(self.registration)
+        self.ui.pushButton_2.clicked.connect(self.back_login_window)
+
+    def registration(self):
+        # user_id = cur.execute('SELECT COUNT(DISTINCT user_id) FROM users')
+        firstname = self.ui.lineEdit_2.text()
+        lastname = self.ui.lineEdit_3.text()
+        username = self.ui.lineEdit_4.text()
+        password = self.ui.lineEdit_5.text()
+        email = self.ui.lineEdit_6.text()
+        cur.execute(f"SELECT username, password FROM users WHERE username = '{username}' AND password = '{password}'")
+
+        if cur.fetchone() is None:
+            cur.execute("INSERT OR IGNORE INTO users VALUES (?,?,?,?,?)",
+                        (firstname, lastname, username, password, email))
+            con.commit()
+            self.ui.label_7.setText("<font color=green>Вы успешно зарегестрировались!</font>")
+            time.sleep(1)
+            RegistrationForm.back_login_window(self)
+        else:
+            self.ui.label_7.setText("<font color=red>Такой логин уже существует!</font>")
+
+    def back_login_window(serf):
+        login_window.show()
+        reg_form.close()
+
+
+class FilterWindow(QtWidgets.QDialog):
+    def __init__(self):
+        super(FilterWindow, self).__init__()
+        self.ui = Ui_Dialog()
+        self.ui.setupUi(self)
+        self.ui.comboBox.currentTextChanged.connect(self.choose_city)
+        self.ui.comboBox_2.currentTextChanged.connect(self.choose_zip)
+        self.ui.buttonBox.accepted.connect(self.show_by_filter)
+        self.ui.buttonBox.rejected.connect(self.back_main_window)
+
+        with open("zip_codes_states.csv", 'r') as fin:
+            dr2 = csv.DictReader(fin)
+            to_db = [(i['zip_code'], i['latitude'], i['longitude'], i['city'], i['state'], i['county']) for i in dr2]
+
+            cur.executemany(
+                "INSERT OR IGNORE INTO zip_codes (zip_code, latitude,longitude, city, state, county) VALUES ( ?, ?, ?, ?, ?, ?);",
+                to_db)
+
+        def combobox_info():  # функция для добавления информации о городах и почтовых зип в комбобокс
+            cur.execute(f"SELECT State FROM maininfo")
+            self.sql = cur.fetchall()
+            return self.sql
+
+        combobox_info()
+        self.state = set()
+        for i in self.sql:
+            self.state.update(i)
+        self.ui.comboBox.addItems(self.state)
+
+    def choose_city(self):
+        self.ui.comboBox_2.clear()
+        self.ui.comboBox_3.clear()
+        self.choose_state = self.ui.comboBox.currentText()
+        cur.execute("SELECT city FROM maininfo WHERE state = '{}'".format(self.choose_state))
+        self.sql_city = cur.fetchall()
+        self.city = set()
+        for i in self.sql_city:
+            self.city.update(i)
+        self.ui.comboBox_2.addItems(self.city)
+
+    def choose_zip(self):
+        self.choose_city = self.ui.comboBox_2.currentText()
+        cur.execute("SELECT zip FROM maininfo WHERE city = '{}'".format(self.choose_city))
+        self.sql_city = cur.fetchall()
+        self.zip_cod = set()
+        for i in self.sql_city:
+            self.zip_cod.update(i)
+        self.ui.comboBox_3.addItems(self.zip_cod)
+
+    def show_by_filter(self):
+        state = self.ui.comboBox.currentText()
+        city = self.ui.comboBox_2.currentText()
+        zip = self.ui.comboBox_3.currentText()
+        tv = MainWindow()
+        tv.ui.tableView.setModel(stm)
+        # tv.setItemDelegateForColumn(0, QtSql.QSqlRelationalDelegate(tv))
+        con1.open()
+        stm.setTable('maininfo')
+        categoryfilter = f"city = '{city}' or State = '{state}' or zip = '{zip}' "
+        stm.setFilter(categoryfilter)
+        # stm.setSort(3, QtCore.Qt.AscendingOrder)
+        stm.select()
+        tv.set_column_tableview_width()
+        tv.ui.tableView.hideColumn(6)
+        count = stm.rowCount()
+        con1.close()
+        tv.ui.label.setText('<font color=green>Успешно! Отображено {} записей</font>'.format(count))
+
+    def back_main_window(self):
+        filter_window.close()
+        window.show()
+
+        # self.ui.comboBox_2.addItems(self.names)
+
+
+class LoginWindow(QtWidgets.QMainWindow):
+    def __init__(self):
+        super(LoginWindow, self).__init__()
+        self.ui = Ui_LoginWindow()
+        self.ui.setupUi(self)
+        self.ui.pushButton_2.clicked.connect(QtWidgets.qApp.quit)
+        self.ui.commandLinkButton_3.clicked.connect(self.registration)
+        self.ui.pushButton.clicked.connect(self.sign_in)
+
+    def sign_in(self):
+        username = self.ui.lineEdit_2.text()
+        password = self.ui.lineEdit.text()
+        querry = cur.execute(
+            f"SELECT username, password FROM users WHERE username = '{username}' AND password = '{password}'")
+        # user = cur.execute(f"SELECT user_id FROM users WHERE username = '{username}' AND password = '{password}'")
+        con.commit()
+        if not cur.fetchone():
+            self.ui.label_4.setText("<font color=red>Неверный логин и/или пароль!</font>")
+        else:
+            window.show()
+            login_window.close()
+            self.ui.label_4.setText("<font color=green>Успешно!Добро пожаловать!</font>")
+
+    def registration(self):
+        login_window.close()
+        reg_form.show()
+
+
 with sq.connect("farms.db") as con:
     cur = con.cursor()
 
@@ -476,10 +550,19 @@ with sq.connect("farms.db") as con:
             FOREIGN KEY (farm_id) REFERENCES maininfo (id),
             FOREIGN KEY (user_id) REFERENCES users (id))""")
 
+    cur.execute("""CREATE TABLE IF NOT EXISTS zip_codes (
+                zip_code VARCHAR,
+                latitude VARCHAR,
+                longitude VARCHAR,
+                city VARCHAR,
+                state VARCHAR,
+                county VARCHAR )""")
+
     con.commit()
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
+    filter_window = FilterWindow()
     window = MainWindow()
     login_window = LoginWindow()
     reg_form = RegistrationForm()
