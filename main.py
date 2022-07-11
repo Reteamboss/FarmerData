@@ -134,25 +134,22 @@ class MainWindow(QtWidgets.QMainWindow):
         stm2.insertRow(stm.rowCount())
         self.ui.label.setText('<font color=green>Отзыв успешно добавлен!</font>')
 
-    def delrecord(self):
-        tv = self.ui.tableView
-        tv.setModel(stm)
-        tv.setItemDelegateForColumn(0, QtSql.QSqlRelationalDelegate(tv))
-        con1.open()
-        stm.setTable('expenses')
-        stm.setRelation(0, QtSql.QSqlRelation('categoryname', 'id_cat', 'category_name'))
-        stm.select()
-        stm.setHeaderData(0, QtCore.Qt.Horizontal, 'Категория')
-        stm.setHeaderData(1, QtCore.Qt.Horizontal, 'Название')
-        stm.setHeaderData(2, QtCore.Qt.Horizontal, 'Стоимость')
-        stm.setHeaderData(3, QtCore.Qt.Horizontal, 'Дата\n yyyy-mm-dd')
-        self.ui.lineEdit.setValidator(QtGui.QIntValidator(0, 10000, parent=window))
-        count = str(stm.rowCount())
-        validator = QtGui.QRegExpValidator(QtCore.QRegExp("[0-{}]".format(count)), parent=window)
-        self.ui.lineEdit.setValidator(validator)
-        id = int(self.ui.lineEdit.text())
-        stm.removeRow(id - 1)
-        self.ui.label.setText('<font color=green>Запись успешно удалена!</font>')
+    # def delrecord(self):
+    #     tv = self.ui.tableView
+    #     tv.setModel(stm)
+    #     tv.setItemDelegateForColumn(0, QtSql.QSqlRelationalDelegate(tv))
+    #     con1.open()
+    #     stm.setTable('expenses')
+    #
+    #     stm.select()
+    #
+    #     self.ui.lineEdit.setValidator(QtGui.QIntValidator(0, 10000, parent=window))
+    #     count = str(stm.rowCount())
+    #     validator = QtGui.QRegExpValidator(QtCore.QRegExp("[0-{}]".format(count)), parent=window)
+    #     self.ui.lineEdit.setValidator(validator)
+    #     id = int(self.ui.lineEdit.text())
+    #     stm.removeRow(id - 1)
+    #     self.ui.label.setText('<font color=green>Запись успешно удалена!</font>')
 
     def mouseMoveEvent(self, e):
         self.ui.label.setText("mouseMoveEvent")
@@ -177,7 +174,7 @@ class MainWindow(QtWidgets.QMainWindow):
         sql_result = list(cur.fetchone())
         cur.execute("SELECT MarketName FROM maininfo WHERE moreinfo_id = '{}'".format(result))
         market_name = list(cur.fetchone())
-        self.ui.label.setText(f"index row = {index.row()+1}")
+        # self.ui.label.setText(f"index row = {index.row()+1}")
         MainWindow.show_more_information(self, sql_result,market_name)
 
 
@@ -240,15 +237,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 
-    def mouseDoubleClickEvent(self, e):
-        if e.button() == Qt.LeftButton:
-            self.ui.label.setText("mouseDoubleClickEvent LEFT")
-
-        elif e.button() == Qt.MiddleButton:
-            self.ui.label.setText("mouseDoubleClickEvent MIDDLE")
-
-        elif e.button() == Qt.RightButton:
-            self.ui.label.setText("mouseDoubleClickEvent RIGHT")
+    # def mouseDoubleClickEvent(self, e):
+    #     if e.button() == Qt.LeftButton:
+    #         self.ui.label.setText("mouseDoubleClickEvent LEFT")
+    #
+    #     elif e.button() == Qt.MiddleButton:
+    #         self.ui.label.setText("mouseDoubleClickEvent MIDDLE")
+    #
+    #     elif e.button() == Qt.RightButton:
+    #         self.ui.label.setText("mouseDoubleClickEvent RIGHT")
 
     def sorted(self, column, minmax):  # minmax - 1 - по возрастанию, minmax - 2 по убыванию, column - номер колонки
         tv = self.ui.tableView
@@ -286,24 +283,19 @@ class MainWindow(QtWidgets.QMainWindow):
     # def sorted_location_max_min(self):
     #     MainWindow.sorted(self,5,2)
 
-    def show_by_date(self):
-        dataedit3 = self.ui.dateEdit.date().toString('yyyy-MM-dd')
-        tv = self.ui.tableView
-        tv.setModel(stm)
-        tv.setItemDelegateForColumn(0, QtSql.QSqlRelationalDelegate(tv))
-        con1.open()
-        stm.setTable('expenses')
-        stm.setRelation(0, QtSql.QSqlRelation('categoryname', 'id_cat', 'category_name'))
-        datafilter = "data = '{}'".format(dataedit3)
-        stm.setFilter(datafilter)
-        stm.setHeaderData(0, QtCore.Qt.Horizontal, 'Категория')
-        stm.setHeaderData(1, QtCore.Qt.Horizontal, 'Название')
-        stm.setHeaderData(2, QtCore.Qt.Horizontal, 'Стоимость')
-        stm.setHeaderData(3, QtCore.Qt.Horizontal, 'Дата\n yyyy-mm-dd')
-        stm.select()
-        count = stm.rowCount()
-        con1.close()
-        self.ui.label.setText('<font color=green>Успешно! Отображено {} записей</font>'.format(count))
+    # def show_by_date(self):
+    #     dataedit3 = self.ui.dateEdit.date().toString('yyyy-MM-dd')
+    #     tv = self.ui.tableView
+    #     tv.setModel(stm)
+    #     tv.setItemDelegateForColumn(0, QtSql.QSqlRelationalDelegate(tv))
+    #     con1.open()
+    #     stm.setTable('expenses')
+    #     datafilter = "data = '{}'".format(dataedit3)
+    #     stm.setFilter(datafilter)
+    #     stm.select()
+    #     count = stm.rowCount()
+    #     con1.close()
+    #     self.ui.label.setText('<font color=green>Успешно! Отображено {} записей</font>'.format(count))
 
     def show_by_category(self):
         category = self.ui.lineEdit_2.text()
@@ -392,6 +384,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.tableView.setColumnWidth(4, 60)
         self.ui.tableView.setColumnWidth(5, 50)
         self.ui.tableView.hideColumn(6)
+        stm.setHeaderData(0, QtCore.Qt.Horizontal, 'FMID')
+        stm.setHeaderData(1, QtCore.Qt.Horizontal, 'MarketName')
+        stm.setHeaderData(2, QtCore.Qt.Horizontal, 'City')
+        stm.setHeaderData(3, QtCore.Qt.Horizontal, 'State')
+        stm.setHeaderData(4, QtCore.Qt.Horizontal, 'ZIP')
+        stm.setHeaderData(5, QtCore.Qt.Horizontal, 'Rating')
 
 
 with sq.connect("farms.db") as con:
