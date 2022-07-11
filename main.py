@@ -9,6 +9,7 @@ from fildesign import Ui_Dialog
 import sys
 import sqlite3 as sq
 import pandas as pd
+import math
 import csv
 import time
 from random import randint
@@ -433,6 +434,31 @@ class FilterWindow(QtWidgets.QDialog):
     def back_main_window(self):
         filter_window.close()
         window.show()
+
+    def calculate_distance(self):
+        zip1 = self.ui.comboBox_3.currentText()
+        cur.execute("SELECT latitude, longitude FROM zip_codes WHERE zip_code = '{}'".format(zip1))
+        zip_result = cur.fetchone()
+        location1 = []
+        for i in zip_result:
+            location1.append(i)
+        cur.execute("SELECT latitude, longitude FROM zip_codes WHERE zip_code")
+        zip_result2 = cur.fetchall()
+        location2 = []
+        for i in zip_result2:
+            location2.append(i)
+
+
+        lat1 = math.radians(location1[0])
+        lat2 = math.radians(location2[0])
+        long1 = math.radians(location1[1])
+        long2 = math.radians(location2[1])
+        del_lat = (lat1 - lat2) / 2
+        del_long = (long1 - long2) / 2
+        angle = math.sin(del_lat) ** 2 + math.cos(lat1) * math.cos(lat2) * \
+                math.sin(del_long) ** 2
+        distance = 2 * 3959.191 * math.asin(math.sqrt(angle))
+        return distance
 
         # self.ui.comboBox_2.addItems(self.names)
 
