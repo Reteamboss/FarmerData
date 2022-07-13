@@ -1,7 +1,6 @@
 from PyQt5 import QtWidgets, QtSql, QtCore, QtGui
 from PyQt5.QtWidgets import QMenuBar, QMenu, QAction
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication
 from designmc3 import Ui_MainWindow
 from interlogindesign import Ui_LoginWindow
 from rfdesign import Ui_RegFormWindow
@@ -9,7 +8,7 @@ from fildesign import Ui_Dialog
 import sys
 import sqlite3 as sq
 import pandas as pd
-import zip_app
+# import zip_app
 import csv
 import time
 from random import randint
@@ -29,20 +28,27 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.tableView.setMouseTracking(True)
         self.ui.tableView.clicked.connect(self.on_click_left_button)
         self.ui.toolButton.clicked.connect(filter_window.show)
+        self.ui.tableView.setSelectionBehavior(True)
 
-    def contextMenuEvent(self, e):
-        context = QMenu(self)
-        context.addAction(QAction("Change", self))
-        context.addAction(QAction("Delete", self))
-        action = context.exec(e.globalPos())
+    # def contextMenuEvent(self, e):
+    #     context = QMenu(self)
+    #     context.addAction(QAction("Change", self))
+    #     context.addAction(QAction("Delete", self))
+    #     action = context.exec(e.globalPos())
+    #
+    #     try:
+    #         if action.text() == "Change":
+    #             print("Change action was executed")
+    #         elif action.text() == "Delete":
+    #             result = self.ui.tableView.clicked.connect(self.index_row)
+    #             stm.removeRow(result)
+    #
+    #     except:
+    #         "NoneType' object has no attribute 'text'"
 
-        try:
-            if action.text() == "Change":
-                print("Change action was executed")
-            elif action.text() == "Delete":
-                print("Delete action was executed")
-        except:
-            "NoneType' object has no attribute 'text'"
+    def index_row(self):
+        index_row = self.ui.tableView.currentIndex().row()
+        return index_row
 
     def show_all(self):
         tv = self.ui.tableView
@@ -82,30 +88,32 @@ class MainWindow(QtWidgets.QMainWindow):
     #     stm.removeRow(id - 1)
     #     self.ui.label.setText('<font color=green>Запись успешно удалена!</font>')
 
-    def mouseMoveEvent(self, e):
-        self.ui.label.setText("mouseMoveEvent")
+    # def mouseMoveEvent(self, e):
+    #     self.ui.label.setText("mouseMoveEvent")
 
-    def mousePressEvent(self, e):
-        if e.button() == Qt.LeftButton:
-            # handle the left-button press in here
-            self.ui.label.setText("mousePressEvent LEFT")
-
-        elif e.button() == Qt.MiddleButton:
-            # handle the middle-button press in here.
-            self.ui.label.setText("mousePressEvent MIDDLE")
-
-        elif e.button() == Qt.RightButton:
-            # handle the right-button press in here.
-            self.ui.label.setText("mousePressEvent RIGHT")
+    # def mouseClickEvent(self, e):
+    #     if e.button() == Qt.LeftButton:
+    #         # handle the left-button press in here
+    #         self.ui.label.setText("mousePressEvent LEFT")
+    #
+    #     elif e.button() == Qt.MiddleButton:
+    #         # handle the middle-button press in here.
+    #         self.ui.label.setText("mousePressEvent MIDDLE")
+    #
+    #     elif e.button() == Qt.RightButton:
+    #         # handle the right-button press in here.
+    #         self.ui.label.setText("mousePressEvent RIGHT")
 
     def on_click_left_button(self, index):
         con1.open()
+
         result = self.ui.tableView.model().index(index.row(), 6).data()
         cur.execute("SELECT * FROM moreinfo WHERE moreinfo_id = '{}'".format(result))
         sql_result = list(cur.fetchone())
         cur.execute("SELECT MarketName FROM maininfo WHERE moreinfo_id = '{}'".format(result))
         market_name = list(cur.fetchone())
         MainWindow.show_more_information(self, sql_result, market_name)
+        return
 
     def show_more_information(self, sql_result, market_name):
         self.ui.label_3.setText(market_name[0])
@@ -163,32 +171,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.label_110.setText(sql_result[52])
         self.ui.label_112.setText(sql_result[53])
 
-    # def show_by_date(self):
-    #     dataedit3 = self.ui.dateEdit.date().toString('yyyy-MM-dd')
-    #     tv = self.ui.tableView
-    #     tv.setModel(stm)
-    #     tv.setItemDelegateForColumn(0, QtSql.QSqlRelationalDelegate(tv))
-    #     con1.open()
-    #     stm.setTable('expenses')
-    #     datafilter = "data = '{}'".format(dataedit3)
-    #     stm.setFilter(datafilter)
-    #     stm.select()
-    #     count = stm.rowCount()
-    #     con1.close()
-    #     self.ui.label.setText('<font color=green>Успешно! Отображено {} записей</font>'.format(count))
-
     def show_by_category(self):
         category = self.ui.lineEdit_2.text()
         tv = self.ui.tableView
         tv.setModel(stm)
-        # tv.setItemDelegateForColumn(0, QtSql.QSqlRelationalDelegate(tv))
         con1.open()
         stm.setTable('maininfo')
 
         if category != "":
             categoryfilter = f"city = '{category}' or State = '{category}' or zip = '{category}' "
             stm.setFilter(categoryfilter)
-            # stm.setSort(3, QtCore.Qt.AscendingOrder)
             stm.select()
             MainWindow.set_column_tableview_width(self)
             count = stm.rowCount()
@@ -209,9 +201,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 to_db = [(i['FMID'], i['MarketName'], i['city'], i['State'], i['zip']) for i in dr]
                 cur.executemany(
                     "INSERT OR IGNORE INTO maininfo (FMID,MarketName, city, State,zip) VALUES ( ?, ?, ?, ?, ?);", to_db)
-                # cur.execute(
-                #     f"INSERT INTO maininfo (rating) VALUES ({randint(1,5)})"
-                # )
+
             with open(filename, 'r') as fin:
                 dr2 = csv.DictReader(fin)
                 to_db2 = [(i['Website'],
@@ -390,10 +380,6 @@ class FilterWindow(QtWidgets.QDialog):
     #         if distance < distance_area:
     #             true_zip.append(x)
     #     print(true_zip)
-
-
-
-
 
 
 class LoginWindow(QtWidgets.QMainWindow):
