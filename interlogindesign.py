@@ -58,7 +58,7 @@ class Ui_LoginWindow(object):
         font.setPointSize(15)
         self.commandLinkButton_3.setFont(font)
         icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap("user-icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon1.addPixmap(QtGui.QPixmap("icons/user-icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.commandLinkButton_3.setIcon(icon1)
         self.commandLinkButton_3.setObjectName("commandLinkButton_3")
         self.label_4 = QtWidgets.QLabel(self.centralwidget)

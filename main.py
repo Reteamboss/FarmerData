@@ -316,7 +316,7 @@ class FilterWindow(QtWidgets.QDialog):
         self.ui.comboBox.currentTextChanged.connect(self.choose_city)
         self.ui.comboBox_2.currentTextChanged.connect(self.choose_zip)
         self.ui.buttonBox.accepted.connect(self.show_by_filter)
-        self.ui.buttonBox.accepted.connect(self.calculate_distance_area)
+        # self.ui.buttonBox.accepted.connect(self.calculate_distance_area)
         self.ui.buttonBox.rejected.connect(self.back_main_window)
 
         with open("zip_codes_states.csv", 'r') as fin:
@@ -376,20 +376,20 @@ class FilterWindow(QtWidgets.QDialog):
         filter_window.close()
         window.show()
 
-    def calculate_distance_area(self):
-        zip1 = self.ui.comboBox_3.currentText()
-        distance_area = self.ui.lineEdit.text()
-        cur.execute("SELECT zip_code FROM zip_codes")
-        zip_result2 = cur.fetchall()
-        zip2 = []
-        true_zip = []
-        for i in zip_result2:
-            zip2.append(i)
-        for x in zip2:
-            distance = zip_app.process_dist(zip1,zip2)
-            if distance < distance_area:
-                true_zip.append(x)
-        print(true_zip)
+    # def calculate_distance_area(self):
+    #     zip1 = self.ui.comboBox_3.currentText()
+    #     distance_area = self.ui.lineEdit.text()
+    #     cur.execute("SELECT zip_code FROM zip_codes")
+    #     zip_result2 = cur.fetchall()
+    #     zip2 = []
+    #     true_zip = []
+    #     for i in zip_result2:
+    #         zip2.append(i)
+    #     for x in zip2:
+    #         distance = zip_app.process_dist(zip1,zip2)
+    #         if distance < distance_area:
+    #             true_zip.append(x)
+    #     print(true_zip)
 
 
 
