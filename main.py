@@ -9,7 +9,7 @@ from fildesign import Ui_Dialog
 import sys
 import sqlite3 as sq
 import pandas as pd
-import math
+import zip_app
 import csv
 import time
 from random import randint
@@ -18,7 +18,6 @@ from random import randint
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
-        # QtWidgets.QWidget.__init__(self, parent)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.ui.pushButton_11.clicked.connect(QtWidgets.qApp.quit)
@@ -27,20 +26,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.pushButton_4.clicked.connect(self.show_all)
         self.ui.pushButton.clicked.connect(self.add_feedback)
         self.ui.action_CSV.triggered.connect(self.import_from_csv)
-        self.ui.actionState_2.triggered.connect(self.sorted_state_min_max)
-        self.ui.actionState_3.triggered.connect(self.sorted_state_max_min)
-        self.ui.actionCity_2.triggered.connect(self.sorted_city_min_max)
-        self.ui.actionCity_3.triggered.connect(self.sorted_city_max_min)
-        self.ui.tableView.setSelectionBehavior(self.ui.tableView.SelectRows)
         self.ui.tableView.setMouseTracking(True)
         self.ui.tableView.clicked.connect(self.on_click_left_button)
         self.ui.toolButton.clicked.connect(filter_window.show)
-
-        # self.ui.lineEdit_2.activated(self.show_by_category)
-        # self.ui.action_2.triggered.connect()
-        # self.ui.tableView.setHorizontalHeader()
-
-        # self.ui.tableView.grabMouse()
 
     def contextMenuEvent(self, e):
         context = QMenu(self)
@@ -174,53 +162,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.label_98.setText(sql_result[51])
         self.ui.label_110.setText(sql_result[52])
         self.ui.label_112.setText(sql_result[53])
-        # self.ui.label_108.setText(sql_result[54])
-
-    # def mouseDoubleClickEvent(self, e):
-    #     if e.button() == Qt.LeftButton:
-    #         self.ui.label.setText("mouseDoubleClickEvent LEFT")
-    #
-    #     elif e.button() == Qt.MiddleButton:
-    #         self.ui.label.setText("mouseDoubleClickEvent MIDDLE")
-    #
-    #     elif e.button() == Qt.RightButton:
-    #         self.ui.label.setText("mouseDoubleClickEvent RIGHT")
-
-    def sorted(self, column, minmax):  # minmax - 1 - по возрастанию, minmax - 2 по убыванию, column - номер колонки
-        tv = self.ui.tableView
-        tv.setModel(stm)
-        con1.open()
-        stm.setTable('maininfo')
-        if minmax == 1:
-            stm.setSort(column, QtCore.Qt.AscendingOrder)  # min->max
-        elif minmax == 2:
-            stm.setSort(column, QtCore.Qt.DescendingOrder)  # max->min
-        stm.select()
-        MainWindow.set_column_tableview_width(self)
-        con1.close()
-
-    def sorted_rating_min_max(self):
-        MainWindow.sorted(self, 5, 1)
-
-    def sorted_state_min_max(self):
-        MainWindow.sorted(self, 3, 1)
-
-    def sorted_city_min_max(self):
-        MainWindow.sorted(self, 2, 1)
-
-    # def sorted_location_min_max(self):
-    #     MainWindow.sorted(self,5,1)
-    def sorted_rating_max_min(self):
-        MainWindow.sorted(self, 5, 2)
-
-    def sorted_state_max_min(self):
-        MainWindow.sorted(self, 3, 2)
-
-    def sorted_city_max_min(self):
-        MainWindow.sorted(self, 2, 2)
-
-    # def sorted_location_max_min(self):
-    #     MainWindow.sorted(self,5,2)
 
     # def show_by_date(self):
     #     dataedit3 = self.ui.dateEdit.date().toString('yyyy-MM-dd')
@@ -316,13 +257,17 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.label.setText('<font color=red>Вы ничего не выбрали!</font>')
 
     def set_column_tableview_width(self):
-        self.ui.tableView.setColumnWidth(0, 70)
-        self.ui.tableView.setColumnWidth(1, 230)
-        self.ui.tableView.setColumnWidth(2, 120)
-        self.ui.tableView.setColumnWidth(3, 120)
-        self.ui.tableView.setColumnWidth(4, 60)
-        self.ui.tableView.setColumnWidth(5, 50)
-        self.ui.tableView.hideColumn(6)
+        tv = self.ui.tableView
+        tv.setModel(stm)
+        tv.setSortingEnabled(True)
+        tv.setColumnWidth(0, 70)
+        tv.setColumnWidth(1, 230)
+        tv.setColumnWidth(2, 120)
+        tv.setColumnWidth(3, 120)
+        tv.setColumnWidth(4, 60)
+        tv.setColumnWidth(5, 50)
+        tv.hideColumn(6)
+
         stm.setHeaderData(0, QtCore.Qt.Horizontal, 'FMID')
         stm.setHeaderData(1, QtCore.Qt.Horizontal, 'MarketName')
         stm.setHeaderData(2, QtCore.Qt.Horizontal, 'City')
@@ -371,6 +316,7 @@ class FilterWindow(QtWidgets.QDialog):
         self.ui.comboBox.currentTextChanged.connect(self.choose_city)
         self.ui.comboBox_2.currentTextChanged.connect(self.choose_zip)
         self.ui.buttonBox.accepted.connect(self.show_by_filter)
+        self.ui.buttonBox.accepted.connect(self.calculate_distance_area)
         self.ui.buttonBox.rejected.connect(self.back_main_window)
 
         with open("zip_codes_states.csv", 'r') as fin:
@@ -413,54 +359,41 @@ class FilterWindow(QtWidgets.QDialog):
         self.ui.comboBox_3.addItems(self.zip_cod)
 
     def show_by_filter(self):
-        state = self.ui.comboBox.currentText()
-        city = self.ui.comboBox_2.currentText()
+        filter_window.close()
         zip = self.ui.comboBox_3.currentText()
-        tv = MainWindow()
-        tv.ui.tableView.setModel(stm)
-        # tv.setItemDelegateForColumn(0, QtSql.QSqlRelationalDelegate(tv))
+        window.ui.tableView.setModel(stm)
         con1.open()
         stm.setTable('maininfo')
-        categoryfilter = f"city = '{city}' or State = '{state}' or zip = '{zip}' "
+        categoryfilter = f" zip = '{zip}' "
         stm.setFilter(categoryfilter)
-        # stm.setSort(3, QtCore.Qt.AscendingOrder)
         stm.select()
-        tv.set_column_tableview_width()
-        tv.ui.tableView.hideColumn(6)
+        window.set_column_tableview_width()
         count = stm.rowCount()
         con1.close()
-        tv.ui.label.setText('<font color=green>Успешно! Отображено {} записей</font>'.format(count))
+        window.ui.label.setText('<font color=green>Успешно! Отображено {} записей</font>'.format(count))
 
     def back_main_window(self):
         filter_window.close()
         window.show()
 
-    def calculate_distance(self):
+    def calculate_distance_area(self):
         zip1 = self.ui.comboBox_3.currentText()
-        cur.execute("SELECT latitude, longitude FROM zip_codes WHERE zip_code = '{}'".format(zip1))
-        zip_result = cur.fetchone()
-        location1 = []
-        for i in zip_result:
-            location1.append(i)
-        cur.execute("SELECT latitude, longitude FROM zip_codes WHERE zip_code")
+        distance_area = self.ui.lineEdit.text()
+        cur.execute("SELECT zip_code FROM zip_codes")
         zip_result2 = cur.fetchall()
-        location2 = []
+        zip2 = []
+        true_zip = []
         for i in zip_result2:
-            location2.append(i)
+            zip2.append(i)
+        for x in zip2:
+            distance = zip_app.process_dist(zip1,zip2)
+            if distance < distance_area:
+                true_zip.append(x)
+        print(true_zip)
 
 
-        lat1 = math.radians(location1[0])
-        lat2 = math.radians(location2[0])
-        long1 = math.radians(location1[1])
-        long2 = math.radians(location2[1])
-        del_lat = (lat1 - lat2) / 2
-        del_long = (long1 - long2) / 2
-        angle = math.sin(del_lat) ** 2 + math.cos(lat1) * math.cos(lat2) * \
-                math.sin(del_long) ** 2
-        distance = 2 * 3959.191 * math.asin(math.sqrt(angle))
-        return distance
 
-        # self.ui.comboBox_2.addItems(self.names)
+
 
 
 class LoginWindow(QtWidgets.QMainWindow):

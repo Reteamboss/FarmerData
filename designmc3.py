@@ -996,7 +996,7 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "FarmData"))
         self.pushButton_3.setText(_translate("MainWindow", "Выйти"))
         self.pushButton_11.setText(_translate("MainWindow", "Quit"))
-        self.label.setText(_translate("MainWindow", "TextLabel"))
+        self.label.setText(_translate("MainWindow", " "))
         self.pushButton_2.setText(_translate("MainWindow", "Find"))
         self.toolButton.setText(_translate("MainWindow", "..."))
         self.pushButton_4.setText(_translate("MainWindow", "Show All"))
