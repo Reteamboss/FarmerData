@@ -1,7 +1,5 @@
 from PyQt5 import QtWidgets, QtSql, QtCore, QtGui
 from PyQt5.QtWidgets import QMenuBar, QMenu, QAction
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QCursor
 from designmc3 import Ui_MainWindow
 from interlogindesign import Ui_LoginWindow
 from rfdesign import Ui_RegFormWindow
@@ -24,12 +22,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.pushButton_2.clicked.connect(self.show_by_category)
         self.find_result = self.ui.pushButton_2.clicked.connect(self.show_by_category)
         self.ui.pushButton_4.clicked.connect(self.show_all)
-        self.ui.pushButton.clicked.connect(self.add_feedback)
+        # self.ui.pushButton.clicked.connect(self.add_feedback)
         self.ui.action_CSV.triggered.connect(self.import_from_csv)
         self.ui.tableView.setMouseTracking(True)
         self.ui.tableView.clicked.connect(self.on_click_left_button)
         self.ui.toolButton.clicked.connect(filter_window.show)
         self.ui.tableView.setSelectionBehavior(True)
+        # self.ui.pushButton.clicked.connect(self.add_feedback)
 
     def contextMenuEvent(self, e):
 
@@ -61,15 +60,13 @@ class MainWindow(QtWidgets.QMainWindow):
         count = len(cur.fetchall())
         self.ui.label.setText('<font color=green>Успешно! Отображено {} записей</font>'.format(count))
 
-    def add_feedback(self):
-        tv = self.ui.tableView_2
-        tv.setModel(stm2)
-        # tv.setItemDelegateForColumn(0, QtSql.QSqlRelationalDelegate(tv))
-        con1.open()
-        stm2.setTable('feedbacks')
-        stm2.select()
-        stm2.insertRow(stm.rowCount())
-        self.ui.label.setText('<font color=green>Отзыв успешно добавлен!</font>')
+    # def add_feedback(self,index):
+    #     farm_id = self.ui.tableView.model().index(index.row(), 6).data()
+    #     user_login = reg_form.registration()
+    #     text = self.ui.textEdit.toPlainText()
+    #     con1.open()
+    #     cur.execute("INSERT INTO feedback VALUES (?,?,?)",(farm_id,user_login,text))
+    #     con1.commit()
 
     # def delrecord(self):
     #     tv = self.ui.tableView
@@ -121,16 +118,34 @@ class MainWindow(QtWidgets.QMainWindow):
         cur.execute("SELECT MarketName FROM maininfo WHERE moreinfo_id = '{}'".format(result))
         market_name = list(cur.fetchone())
         MainWindow.show_more_information(self, sql_result, market_name)
+        MainWindow.show_feedback(self)
+
+    def show_feedback(self):
+        tv2 = self.ui.tableView_2
+        tv2.setModel(stm2)
+        con1.open()
+        stm2.setTable('feedbacks')
+        tv2.setColumnWidth(1, 60)
+        tv2.setColumnWidth(2, 400)
+        tv2.hideColumn(0)
+
+        stm.setHeaderData(0, QtCore.Qt.Horizontal, 'Login')
+        stm.setHeaderData(1, QtCore.Qt.Horizontal, 'FeedBack')
+
+
+
+
+
 
     def show_more_information(self, sql_result, market_name):
         self.ui.label_3.setText(market_name[0])
         self.ui.label_21.setText(f'<a href="{str(sql_result[1])}">{sql_result[1]}</a>')
         self.ui.label_22.setText(sql_result[2])
         self.ui.label_23.setText(sql_result[3])
-        self.ui.label_24.setText(sql_result[4])
-        self.ui.label_25.setText(sql_result[5])
-        self.ui.label_26.setText(sql_result[6])
-        self.ui.label_27.setText(sql_result[7])
+        self.ui.label_24.setText(f'<a href="{str(sql_result[4])}">{sql_result[4]}</a>')
+        self.ui.label_25.setText(f'<a href="{str(sql_result[5])}">{sql_result[5]}</a>')
+        self.ui.label_26.setText(f'<a href="{str(sql_result[6])}">{sql_result[6]}</a>')
+        self.ui.label_27.setText(f'<a href="{str(sql_result[7])}">{sql_result[7]}</a>')
         self.ui.label_28.setText(sql_result[8])
         self.ui.label_29.setText(sql_result[9])
         self.ui.label_30.setText(sql_result[10])
@@ -299,6 +314,7 @@ class RegistrationForm(QtWidgets.QMainWindow):
             RegistrationForm.back_login_window(self)
         else:
             self.ui.label_7.setText("<font color=red>Такой логин уже существует!</font>")
+        return username
 
     def back_login_window(serf):
         login_window.show()
@@ -491,16 +507,16 @@ with sq.connect("farms.db") as con:
     cur.execute("""CREATE TABLE IF NOT EXISTS users (
         lastname VARCHAR,
         firstname VARCHAR,
-        username VARCHAR,
+        username VARCHAR PRIMARY KEY,
         password VARCHAR,
         email VARCHAR )""")
 
     cur.execute("""CREATE TABLE IF NOT EXISTS feedbacks (
             farm_id INTEGER,
-            user_id INTEGER,
+            user_login VARCHAR,
             text VARCHAR,
-            FOREIGN KEY (farm_id) REFERENCES maininfo (id),
-            FOREIGN KEY (user_id) REFERENCES users (id))""")
+            rating INTEGER,
+            FOREIGN KEY (farm_id) REFERENCES maininfo (moreinfo_id))""")
 
     cur.execute("""CREATE TABLE IF NOT EXISTS zip_codes (
                 zip_code VARCHAR,
