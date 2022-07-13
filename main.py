@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets, QtSql, QtCore, QtGui
 from PyQt5.QtWidgets import QMenuBar, QMenu, QAction
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QCursor
 from designmc3 import Ui_MainWindow
 from interlogindesign import Ui_LoginWindow
 from rfdesign import Ui_RegFormWindow
@@ -30,21 +31,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.toolButton.clicked.connect(filter_window.show)
         self.ui.tableView.setSelectionBehavior(True)
 
-    # def contextMenuEvent(self, e):
-    #     context = QMenu(self)
-    #     context.addAction(QAction("Change", self))
-    #     context.addAction(QAction("Delete", self))
-    #     action = context.exec(e.globalPos())
-    #
-    #     try:
-    #         if action.text() == "Change":
-    #             print("Change action was executed")
-    #         elif action.text() == "Delete":
-    #             result = self.ui.tableView.clicked.connect(self.index_row)
-    #             stm.removeRow(result)
-    #
-    #     except:
-    #         "NoneType' object has no attribute 'text'"
+    def contextMenuEvent(self, e):
+
+        self.contextMenu = QMenu(self)
+        self.contextMenu.addAction(QAction("Change", self))
+        self.contextMenu.addAction(QAction("Delete", self))
+        action = self.contextMenu.exec(e.globalPos())
+        try:
+            if action.text() == "Change":
+                print("Change action was executed")
+            elif action.text() == "Delete":
+                stm.removeRow()
+
+        except:
+            "NoneType' object has no attribute 'text'"
 
     def index_row(self):
         index_row = self.ui.tableView.currentIndex().row()
@@ -103,17 +103,24 @@ class MainWindow(QtWidgets.QMainWindow):
     #     elif e.button() == Qt.RightButton:
     #         # handle the right-button press in here.
     #         self.ui.label.setText("mousePressEvent RIGHT")
+    # def mouseReleaseEvent(self, e):
+    #     if e.button() == Qt.LeftButton:
+    #         self.label.setText("mouseReleaseEvent LEFT")
+    #
+    #     elif e.button() == Qt.MiddleButton:
+    #         self.label.setText("mouseReleaseEvent MIDDLE")
+    #
+    #     elif e.button() == Qt.RightButton:
+    #         self.label.setText("mouseReleaseEvent RIGHT")
 
     def on_click_left_button(self, index):
         con1.open()
-
         result = self.ui.tableView.model().index(index.row(), 6).data()
         cur.execute("SELECT * FROM moreinfo WHERE moreinfo_id = '{}'".format(result))
         sql_result = list(cur.fetchone())
         cur.execute("SELECT MarketName FROM maininfo WHERE moreinfo_id = '{}'".format(result))
         market_name = list(cur.fetchone())
         MainWindow.show_more_information(self, sql_result, market_name)
-        return
 
     def show_more_information(self, sql_result, market_name):
         self.ui.label_3.setText(market_name[0])
