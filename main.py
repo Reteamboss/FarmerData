@@ -22,7 +22,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.pushButton_2.clicked.connect(self.show_by_category)
         self.find_result = self.ui.pushButton_2.clicked.connect(self.show_by_category)
         self.ui.pushButton_4.clicked.connect(self.show_all)
-        # self.ui.pushButton.clicked.connect(self.add_feedback)
         self.ui.action_CSV.triggered.connect(self.import_from_csv)
         self.ui.tableView.setMouseTracking(True)
         self.ui.tableView.clicked.connect(self.on_click_left_button)
@@ -33,6 +32,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.pushButton.setEnabled(True)
 
         self.ui.pushButton.clicked.connect(self.add_feedback)
+        self.ui.pushButton.clicked.connect(self.show_feedback)
 
     def contextMenuEvent(self, e):
 
@@ -67,30 +67,48 @@ class MainWindow(QtWidgets.QMainWindow):
         cur.execute("SELECT * FROM maininfo")
         count = len(cur.fetchall())
         self.ui.label.setText('<font color=green>Успешно! Отображено {} записей</font>'.format(count))
-        con1.close()
 
 
+    def rating_calculate(self, farm_id):
+        con1.open()
+        cur.execute(f"SELECT rating FROM feedbacks WHERE farm_id = '{farm_id}'")
+        rating_result = cur.fetchall()
+        result_list = []
+        for x in rating_result:
+            result = x[0]
+            result_list.append(result)
+        rating_result_2 = float(sum(result_list) / len(result_list))
+        format_rating_result = "{0:1.1f}".format(rating_result_2)
+
+        return format_rating_result
+
+    def rating_insert(self,farm_id):
+        con1.open()
+        rating = window.rating_calculate(farm_id)
+        self.ui.label.setText("{}".format(rating))
+        cur.execute("UPDATE moreinfo SET rating = '{}' WHERE moreinfo_id = '{}'".format(rating,farm_id))
+        con1.commit()
 
     def add_feedback(self):
-        con1.open()
-        username = login_window.sign_in()
-        farm_id = window.index_farm()
-        text = self.ui.textEdit.toPlainText()
-        rating = int(self.ui.comboBox.currentText())
-        self.ui.textEdit.clear()
-        cur.execute(f"SELECT firstname, lastname FROM users WHERE username = '{username}'")
-        name = cur.fetchone()
-        firstname = name[0]
-        lastname = name[1]
-        # print(f"Feed Back: farm id = {MainWindow.index_farm(self)}, username = {username}, firstname = {firstname}, lastname = {lastname}, text = {text}, rating  = {rating}")
-        # print(type(farm_id))
-        # print(type(username))
-        # print(type(firstname))
-        # print(type(lastname))
-        # print(type(text))
-        # print(type(rating))
-        cur.executemany("INSERT INTO feedbacks VALUES (?,?,?,?,?,?)" ,(farm_id, username, firstname, lastname, text, rating))
-        con1.commit()
+        try:
+            con1.open()
+            username = login_window.sign_in()
+            farm_id = window.index_farm()
+            text = self.ui.textEdit.toPlainText()
+            rating = int(self.ui.comboBox.currentText())
+            self.ui.textEdit.clear()
+            cur.execute(f"SELECT firstname, lastname FROM users WHERE username = '{username}'")
+            name = cur.fetchone()
+            firstname = name[0]
+            lastname = name[1]
+            cur.execute("INSERT INTO feedbacks VALUES (?,?,?,?,?,?);" ,(farm_id, username, firstname, lastname, text, rating))
+            window.rating_insert(farm_id)
+            con1.commit()
+        except:
+            print(" ")
+
+
+
 
     # def delrecord(self)
     #     tv = self.ui.tableView
@@ -145,26 +163,31 @@ class MainWindow(QtWidgets.QMainWindow):
         MainWindow.show_feedback(self)
         return result
 
-    def show_feedback(self):
-        tv = self.ui.tableView_2
-        tv.setModel(stm2)
-        con1.open()
-        stm2.setTable('feedbacks')
-        stm2.select()
-        farm_id = MainWindow.index_farm(self)
-        feedback_filter = f"SELECT * FROM feedback WHERE farm_id = '{farm_id}'"
-        stm2.setFilter(feedback_filter)
-        tv.setColumnWidth(2, 130)
-        tv.setColumnWidth(3, 130)
-        tv.setColumnWidth(4, 350)
-        tv.setColumnWidth(5, 40)
-        tv.hideColumn(0)
-        tv.hideColumn(1)
 
-        stm2.setHeaderData(2, QtCore.Qt.Horizontal, 'FirstName')
-        stm2.setHeaderData(3, QtCore.Qt.Horizontal, 'LastName')
-        stm2.setHeaderData(4, QtCore.Qt.Horizontal, 'FeedBack')
-        stm2.setHeaderData(5, QtCore.Qt.Horizontal, 'Rating')
+    def show_feedback(self):
+        try:
+            tv = self.ui.tableView_2
+            tv.setModel(stm2)
+            con1.open()
+            stm2.setTable('feedbacks')
+            stm2.select()
+            farm_id = window.index_farm()
+            filter = f"farm_id = '{farm_id}'"
+            stm2.setFilter(filter)
+            tv.setColumnWidth(2, 130)
+            tv.setColumnWidth(3, 130)
+            tv.setColumnWidth(4, 345)
+            tv.setColumnWidth(5, 40)
+            tv.hideColumn(0)
+            tv.hideColumn(1)
+
+            stm2.setHeaderData(2, QtCore.Qt.Horizontal, 'FirstName')
+            stm2.setHeaderData(3, QtCore.Qt.Horizontal, 'LastName')
+            stm2.setHeaderData(4, QtCore.Qt.Horizontal, 'FeedBack')
+            stm2.setHeaderData(5, QtCore.Qt.Horizontal, 'Rating')
+        except:
+            self.ui.label.setText('<font color=red>Вы ничего не выбрали!</font>')
+
 
 
 
@@ -240,7 +263,6 @@ class MainWindow(QtWidgets.QMainWindow):
             stm.select()
             MainWindow.set_column_tableview_width(self)
             count = stm.rowCount()
-            con1.close()
             self.ui.label.setText('<font color=green>Успешно! Отображено {} записей</font>'.format(count))
         else:
             self.ui.label.setText('<font color=red>Вы ничего не выбрали!</font>')
@@ -541,7 +563,7 @@ with sq.connect("farms.db") as con:
         city TEXT,
         State TEXT,
         zip TEXT,
-        rating INTEGER,
+        rating REAL,
         moreinfo_id INTEGER PRIMARY KEY AUTOINCREMENT,
         FOREIGN KEY (moreinfo_id) REFERENCES moreinfo (moreinfo_id))
         """)
