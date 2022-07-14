@@ -26,9 +26,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.action_CSV.triggered.connect(self.import_from_csv)
         self.ui.tableView.setMouseTracking(True)
         self.ui.tableView.clicked.connect(self.on_click_left_button)
+        self.ui.tableView.clicked.connect(self.index_farm)
         self.ui.toolButton.clicked.connect(filter_window.show)
         self.ui.tableView.setSelectionBehavior(True)
-        # self.ui.pushButton.clicked.connect(self.add_feedback)
+        # self.ui.comboBox.currentIndexChanged.activated(self.ui.pushButton.setEnabled(True))
+        self.ui.pushButton.setEnabled(True)
+
+        self.ui.pushButton.clicked.connect(self.add_feedback)
 
     def contextMenuEvent(self, e):
 
@@ -49,6 +53,10 @@ class MainWindow(QtWidgets.QMainWindow):
         index_row = self.ui.tableView.currentIndex().row()
         return index_row
 
+    def index_farm(self):
+        index_farm = self.ui.tableView.model().index(MainWindow.index_row(self), 6).data()
+        return index_farm
+
     def show_all(self):
         tv = self.ui.tableView
         tv.setModel(stm)
@@ -59,16 +67,32 @@ class MainWindow(QtWidgets.QMainWindow):
         cur.execute("SELECT * FROM maininfo")
         count = len(cur.fetchall())
         self.ui.label.setText('<font color=green>Успешно! Отображено {} записей</font>'.format(count))
+        con1.close()
 
-    # def add_feedback(self,index):
-    #     farm_id = self.ui.tableView.model().index(index.row(), 6).data()
-    #     user_login = reg_form.registration()
-    #     text = self.ui.textEdit.toPlainText()
-    #     con1.open()
-    #     cur.execute("INSERT INTO feedback VALUES (?,?,?)",(farm_id,user_login,text))
-    #     con1.commit()
 
-    # def delrecord(self):
+
+    def add_feedback(self):
+        con1.open()
+        username = login_window.sign_in()
+        farm_id = window.index_farm()
+        text = self.ui.textEdit.toPlainText()
+        rating = int(self.ui.comboBox.currentText())
+        self.ui.textEdit.clear()
+        cur.execute(f"SELECT firstname, lastname FROM users WHERE username = '{username}'")
+        name = cur.fetchone()
+        firstname = name[0]
+        lastname = name[1]
+        # print(f"Feed Back: farm id = {MainWindow.index_farm(self)}, username = {username}, firstname = {firstname}, lastname = {lastname}, text = {text}, rating  = {rating}")
+        # print(type(farm_id))
+        # print(type(username))
+        # print(type(firstname))
+        # print(type(lastname))
+        # print(type(text))
+        # print(type(rating))
+        cur.executemany("INSERT INTO feedbacks VALUES (?,?,?,?,?,?)" ,(farm_id, username, firstname, lastname, text, rating))
+        con1.commit()
+
+    # def delrecord(self)
     #     tv = self.ui.tableView
     #     tv.setModel(stm)
     #     tv.setItemDelegateForColumn(0, QtSql.QSqlRelationalDelegate(tv))
@@ -119,18 +143,28 @@ class MainWindow(QtWidgets.QMainWindow):
         market_name = list(cur.fetchone())
         MainWindow.show_more_information(self, sql_result, market_name)
         MainWindow.show_feedback(self)
+        return result
 
     def show_feedback(self):
-        tv2 = self.ui.tableView_2
-        tv2.setModel(stm2)
+        tv = self.ui.tableView_2
+        tv.setModel(stm2)
         con1.open()
         stm2.setTable('feedbacks')
-        tv2.setColumnWidth(1, 60)
-        tv2.setColumnWidth(2, 400)
-        tv2.hideColumn(0)
+        stm2.select()
+        farm_id = MainWindow.index_farm(self)
+        feedback_filter = f"SELECT * FROM feedback WHERE farm_id = '{farm_id}'"
+        stm2.setFilter(feedback_filter)
+        tv.setColumnWidth(2, 130)
+        tv.setColumnWidth(3, 130)
+        tv.setColumnWidth(4, 350)
+        tv.setColumnWidth(5, 40)
+        tv.hideColumn(0)
+        tv.hideColumn(1)
 
-        stm.setHeaderData(0, QtCore.Qt.Horizontal, 'Login')
-        stm.setHeaderData(1, QtCore.Qt.Horizontal, 'FeedBack')
+        stm2.setHeaderData(2, QtCore.Qt.Horizontal, 'FirstName')
+        stm2.setHeaderData(3, QtCore.Qt.Horizontal, 'LastName')
+        stm2.setHeaderData(4, QtCore.Qt.Horizontal, 'FeedBack')
+        stm2.setHeaderData(5, QtCore.Qt.Horizontal, 'Rating')
 
 
 
@@ -287,6 +321,13 @@ class MainWindow(QtWidgets.QMainWindow):
         stm.setHeaderData(4, QtCore.Qt.Horizontal, 'ZIP')
         stm.setHeaderData(5, QtCore.Qt.Horizontal, 'Rating')
 
+class User():
+    def __init__(self, firstname, lastname, username, password, email):
+        self.firstname = firstname
+        self.lastname = lastname
+        self.username = username
+        self.password = password
+        self.email = email
 
 class RegistrationForm(QtWidgets.QMainWindow):
     def __init__(self):
@@ -296,25 +337,24 @@ class RegistrationForm(QtWidgets.QMainWindow):
         self.ui.pushButton.clicked.connect(self.registration)
         self.ui.pushButton_2.clicked.connect(self.back_login_window)
 
+
     def registration(self):
-        # user_id = cur.execute('SELECT COUNT(DISTINCT user_id) FROM users')
-        firstname = self.ui.lineEdit_2.text()
-        lastname = self.ui.lineEdit_3.text()
-        username = self.ui.lineEdit_4.text()
-        password = self.ui.lineEdit_5.text()
-        email = self.ui.lineEdit_6.text()
-        cur.execute(f"SELECT username, password FROM users WHERE username = '{username}' AND password = '{password}'")
+        user = User(firstname=self.ui.lineEdit_2.text(),
+                      lastname=self.ui.lineEdit_3.text(),
+                      username=self.ui.lineEdit_4.text(),
+                      password=self.ui.lineEdit_5.text(),
+                      email=self.ui.lineEdit_6.text())
+        cur.execute(f"SELECT username, password FROM users WHERE username = '{user.username}' AND password = '{user.password}'")
 
         if cur.fetchone() is None:
             cur.execute("INSERT OR IGNORE INTO users VALUES (?,?,?,?,?)",
-                        (firstname, lastname, username, password, email))
+                        (user.firstname, user.lastname, user.username, user.password, user.email))
             con.commit()
             self.ui.label_7.setText("<font color=green>Вы успешно зарегестрировались!</font>")
             time.sleep(1)
             RegistrationForm.back_login_window(self)
         else:
             self.ui.label_7.setText("<font color=red>Такой логин уже существует!</font>")
-        return username
 
     def back_login_window(serf):
         login_window.show()
@@ -417,16 +457,18 @@ class LoginWindow(QtWidgets.QMainWindow):
     def sign_in(self):
         username = self.ui.lineEdit_2.text()
         password = self.ui.lineEdit.text()
-        querry = cur.execute(
-            f"SELECT username, password FROM users WHERE username = '{username}' AND password = '{password}'")
-        # user = cur.execute(f"SELECT user_id FROM users WHERE username = '{username}' AND password = '{password}'")
+        cur.execute(f"SELECT username, password FROM users WHERE username = '{username}' AND password = '{password}'")
         con.commit()
         if not cur.fetchone():
             self.ui.label_4.setText("<font color=red>Неверный логин и/или пароль!</font>")
         else:
-            window.show()
-            login_window.close()
             self.ui.label_4.setText("<font color=green>Успешно!Добро пожаловать!</font>")
+            window.show()
+            cur.execute(f"SELECT firstname, lastname FROM users WHERE username = '{username}' AND password = '{password}'")
+            name = cur.fetchone()
+            window.ui.label_113.setText(f"{name[0]} {name[1]}")
+            login_window.close()
+            return username
 
     def registration(self):
         login_window.close()
@@ -514,6 +556,8 @@ with sq.connect("farms.db") as con:
     cur.execute("""CREATE TABLE IF NOT EXISTS feedbacks (
             farm_id INTEGER,
             user_login VARCHAR,
+            firstname VARCHAR, 
+            lastname VARCHAR,
             text VARCHAR,
             rating INTEGER,
             FOREIGN KEY (farm_id) REFERENCES maininfo (moreinfo_id))""")
