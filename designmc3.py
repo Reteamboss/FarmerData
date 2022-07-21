@@ -48,6 +48,7 @@ class Ui_MainWindow(object):
         self.tableView = QtWidgets.QTableView(self.frame_2)
         self.tableView.setGeometry(QtCore.QRect(10, 10, 681, 591))
         self.tableView.setShowGrid(False)
+        self.tableView.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.tableView.setObjectName("tableView")
         self.toolButton = QtWidgets.QToolButton(self.frame_2)
         self.toolButton.setGeometry(QtCore.QRect(660, 570, 26, 22))

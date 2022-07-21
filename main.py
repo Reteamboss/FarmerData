@@ -1,5 +1,6 @@
 from PyQt5 import QtWidgets, QtSql, QtCore, QtGui
 from PyQt5.QtWidgets import QMenuBar, QMenu, QAction
+from PyQt5.QtSql import QSqlTableModel
 from designmc3 import Ui_MainWindow
 from interlogindesign import Ui_LoginWindow
 from rfdesign import Ui_RegFormWindow
@@ -28,26 +29,34 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.tableView.clicked.connect(self.index_farm)
         self.ui.toolButton.clicked.connect(filter_window.show)
         self.ui.tableView.setSelectionBehavior(True)
-        # self.ui.comboBox.currentIndexChanged.activated(self.ui.pushButton.setEnabled(True))
-        self.ui.pushButton.setEnabled(True)
-
+        self.ui.comboBox.currentIndexChanged.connect(self.button_activate)
         self.ui.pushButton.clicked.connect(self.add_feedback)
-        self.ui.pushButton.clicked.connect(self.show_feedback)
 
     def contextMenuEvent(self, e):
 
-        self.contextMenu = QMenu(self)
-        self.contextMenu.addAction(QAction("Change", self))
-        self.contextMenu.addAction(QAction("Delete", self))
-        action = self.contextMenu.exec(e.globalPos())
-        try:
-            if action.text() == "Change":
-                print("Change action was executed")
-            elif action.text() == "Delete":
-                stm.removeRow()
+        self.ui.tableView.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
+        addgrup_action = QAction(u"Delete", self)
+        addgrup_action2 = QAction(u"Add", self)
+        addgrup_action.triggered.connect(self.delrecord)
+        addgrup_action2.triggered.connect(self.addrecord)
+        self.ui.tableView.addAction(addgrup_action)
+        self.ui.tableView.addAction(addgrup_action2)
 
-        except:
-            "NoneType' object has no attribute 'text'"
+        # # self.contextMenu = QMenu(self)
+        # # self.contextMenu.addAction(QAction("Change", self))
+        # # self.contextMenu.addAction(QAction("Delete", self))
+        # # action = self.contextMenu.exec(e.globalPos())
+        # try:
+        #     if action.text() == "Change":
+        #         print("Change action was executed")
+        #     elif action.text() == "Delete":
+        #         stm.removeRow()
+        #
+        # except:
+        #     "NoneType' object has no attribute 'text'"
+
+    def button_activate(self):
+        self.ui.pushButton.setEnabled(True)
 
     def index_row(self):
         index_row = self.ui.tableView.currentIndex().row()
@@ -86,7 +95,8 @@ class MainWindow(QtWidgets.QMainWindow):
         con1.open()
         rating = window.rating_calculate(farm_id)
         self.ui.label.setText("{}".format(rating))
-        cur.execute("UPDATE moreinfo SET rating = '{}' WHERE moreinfo_id = '{}'".format(rating,farm_id))
+        sql_update_query = """UPDATE maininfo SET rating = '{}' WHERE moreinfo_id = '{}'""".format(rating,farm_id)
+        cur.execute(sql_update_query)
         con1.commit()
 
     def add_feedback(self):
@@ -96,7 +106,6 @@ class MainWindow(QtWidgets.QMainWindow):
             farm_id = window.index_farm()
             text = self.ui.textEdit.toPlainText()
             rating = int(self.ui.comboBox.currentText())
-            self.ui.textEdit.clear()
             cur.execute(f"SELECT firstname, lastname FROM users WHERE username = '{username}'")
             name = cur.fetchone()
             firstname = name[0]
@@ -105,27 +114,27 @@ class MainWindow(QtWidgets.QMainWindow):
             window.rating_insert(farm_id)
             con1.commit()
         except:
-            print(" ")
+            "NoneType' object has no attribute 'text'"
 
 
 
 
-    # def delrecord(self)
-    #     tv = self.ui.tableView
-    #     tv.setModel(stm)
-    #     tv.setItemDelegateForColumn(0, QtSql.QSqlRelationalDelegate(tv))
-    #     con1.open()
-    #     stm.setTable('expenses')
-    #
-    #     stm.select()
-    #
-    #     self.ui.lineEdit.setValidator(QtGui.QIntValidator(0, 10000, parent=window))
-    #     count = str(stm.rowCount())
-    #     validator = QtGui.QRegExpValidator(QtCore.QRegExp("[0-{}]".format(count)), parent=window)
-    #     self.ui.lineEdit.setValidator(validator)
-    #     id = int(self.ui.lineEdit.text())
-    #     stm.removeRow(id - 1)
-    #     self.ui.label.setText('<font color=green>Запись успешно удалена!</font>')
+    def delrecord(self):
+        con1.open()
+        stm.setTable('maininfo')
+        stm.select()
+        stm.setEditStrategy(QSqlTableModel.OnManualSubmit)
+        id = window.index_row()
+        stm.removeRow(id + 1)
+        stm.select()
+        stm.submitAll()
+        cur.execute("DELETE FROM maininfo WHERE moreinfo_id = '{}'".format(id))
+        con1.commit()
+        window.set_column_tableview_width()
+        self.ui.label.setText('<font color=green>Запись успешно удалена!</font>')
+
+    def addrecord(self):
+        stm.insertRow(stm.rowCount())
 
     # def mouseMoveEvent(self, e):
     #     self.ui.label.setText("mouseMoveEvent")
@@ -185,6 +194,7 @@ class MainWindow(QtWidgets.QMainWindow):
             stm2.setHeaderData(3, QtCore.Qt.Horizontal, 'LastName')
             stm2.setHeaderData(4, QtCore.Qt.Horizontal, 'FeedBack')
             stm2.setHeaderData(5, QtCore.Qt.Horizontal, 'Rating')
+
         except:
             self.ui.label.setText('<font color=red>Вы ничего не выбрали!</font>')
 
@@ -342,6 +352,8 @@ class MainWindow(QtWidgets.QMainWindow):
         stm.setHeaderData(3, QtCore.Qt.Horizontal, 'State')
         stm.setHeaderData(4, QtCore.Qt.Horizontal, 'ZIP')
         stm.setHeaderData(5, QtCore.Qt.Horizontal, 'Rating')
+
+
 
 class User():
     def __init__(self, firstname, lastname, username, password, email):

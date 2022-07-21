@@ -33,6 +33,7 @@ class Ui_LoginWindow(object):
         self.gridLayout.addWidget(self.label_2, 0, 0, 1, 1)
         self.lineEdit = QtWidgets.QLineEdit(self.gridLayoutWidget)
         self.lineEdit.setObjectName("lineEdit")
+        self.lineEdit.setEchoMode(QtWidgets.QLineEdit.Password)
         self.gridLayout.addWidget(self.lineEdit, 1, 1, 1, 1)
         self.label_3 = QtWidgets.QLabel(self.gridLayoutWidget)
         self.label_3.setObjectName("label_3")
