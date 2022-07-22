@@ -1,6 +1,8 @@
 from PyQt5 import QtWidgets, QtSql, QtCore, QtGui
 from PyQt5.QtWidgets import QMenuBar, QMenu, QAction
 from PyQt5.QtSql import QSqlTableModel
+
+
 from designmc3 import Ui_MainWindow
 from interlogindesign import Ui_LoginWindow
 from rfdesign import Ui_RegFormWindow
@@ -8,7 +10,8 @@ from fildesign import Ui_Dialog
 import sys
 import sqlite3 as sq
 import pandas as pd
-# import zip_app
+import zip_app
+import util
 import csv
 import time
 from random import randint
@@ -136,6 +139,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def addrecord(self):
         stm.insertRow(stm.rowCount())
 
+
     # def mouseMoveEvent(self, e):
     #     self.ui.label.setText("mouseMoveEvent")
 
@@ -170,6 +174,7 @@ class MainWindow(QtWidgets.QMainWindow):
         market_name = list(cur.fetchone())
         MainWindow.show_more_information(self, sql_result, market_name)
         MainWindow.show_feedback(self)
+
         return result
 
 
@@ -403,6 +408,7 @@ class FilterWindow(QtWidgets.QDialog):
         self.ui.comboBox.currentTextChanged.connect(self.choose_city)
         self.ui.comboBox_2.currentTextChanged.connect(self.choose_zip)
         self.ui.buttonBox.accepted.connect(self.show_by_filter)
+        # self.ui.buttonBox.accepted.connect(self.zip_area)
         # self.ui.buttonBox.accepted.connect(self.calculate_distance_area)
         self.ui.buttonBox.rejected.connect(self.back_main_window)
 
@@ -451,17 +457,59 @@ class FilterWindow(QtWidgets.QDialog):
         window.ui.tableView.setModel(stm)
         con1.open()
         stm.setTable('maininfo')
-        categoryfilter = f" zip = '{zip}' "
-        stm.setFilter(categoryfilter)
+        try:
+            dist_var = float(self.ui.lineEdit.text())
+        except:
+            "ValueError: could not convert string to float: ''"
+
+
+        # zip_db = filter_window.zip_area()
+        zip_db = ['82701','06510']
+        for zip_var in zip_db:
+            categoryfilter = f" zip = '{zip_var}'"
+            stm.setFilter(categoryfilter)
         stm.select()
         window.set_column_tableview_width()
         count = stm.rowCount()
         con1.close()
         window.ui.label.setText('<font color=green>Успешно! Отображено {} записей</font>'.format(count))
 
+    def get_zip(self):
+        zip = self.ui.comboBox_3.currentText()
+        return zip
+
+
     def back_main_window(self):
         filter_window.close()
         window.show()
+
+    def zip_area(self):
+        con1.open()
+        cur.execute("SELECT zip FROM maininfo")
+        zips = cur.fetchall()
+        zip_db = []
+        zip_set = set(zips)
+        zip1 = filter_window.get_zip()
+        dist_var = float(self.ui.lineEdit.text())
+        for zip2 in zip_set:
+            zip_codes = util.read_zip_all()
+            rezult = zip_app.process_dist(zip_codes, zip1, zip2[0])
+            try:
+                if rezult <= dist_var:
+                    zip_db.append(zip2[0])
+                print(rezult)
+                print(zip_db)
+            except:
+                "TypeError: '<=' not supported between instances of 'NoneType' and 'float'"
+        return zip_db
+
+
+
+        # zip_codes = util.read_zip_all()
+        # rezult = zip_app.process_dist(zip_codes, zip1, zip2)
+        # print(zip_list)
+        print(dist_var)
+        print(rezult)
 
     # def calculate_distance_area(self):
     #     zip1 = self.ui.comboBox_3.currentText()
